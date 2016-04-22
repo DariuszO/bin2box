@@ -10,6 +10,11 @@ With bin2box, you can convert many files at once without having to edit them
 
 Bin2Box is cross-platform and it works on OS X, Linux and Windows.
 
+### Download
+
+* [For Linux, OSX and Windows](https://www.dropbox.com/s/facuskt3t0mkjyt/Bin2Box.zip?dl=0)
+
+
 ### Links
 
 [SBaGen](https://uazu.net/sbagen/)
