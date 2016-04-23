@@ -1,0 +1,344 @@
+#!/bin/bash
+
+### +=============================================================================+
+### | Created by Ruan K. F
+### | Contact: <ruan.klein@gmail.com>
+### +=============================================================================+
+
+#       "This program is free software; you can redistribute it and/or modify
+#       it under the terms of the GNU General Public License as published by
+#       the Free Software Foundation; either version 2 of the License, or
+#       (at your option) any later version.
+#
+#       This program is distributed in the hope that it will be useful,
+#       but WITHOUT ANY WARRANTY; without even the implied warranty of
+#       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#       GNU General Public License for more details.
+#
+#       You should have received a copy of the GNU General Public License
+#       along with this program; if not, write to the Free Software
+#       Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+#       MA 02110-1301, USA."
+
+###
+### bin2box VERSION: 1.3d
+
+ ### Functions
+fprint() { echo -ne "$2" >> "$1"; }
+calc() { bc -q <<< "scale=$SCALE; $*"; }
+print_error() { echo "$PROGNAME error: $*" >&2; }
+usage() { echo "Usage: $PROGNAME [OPTIONS] {-|sbagen-sequence-file.sbg...}" 2>&1; }
+dos2unix() { sed -i -re 's?\r??' "$@" 2>/dev/null; }
+unix2dos() { sed -i -re 's?$?\r?' "$@" 2>/dev/null; }
+
+# Only OSX
+check_dos_unix() {
+  for dir in $(echo $PATH | tr ':' ' '); do
+    if  [ ! -x $dir/dos2unix -a -x $dir/unix2dos ]; then
+    	print_error "unix2dos not found"
+    	return 1
+    fi
+  done
+  return 0;
+}
+
+printOpts() {
+	cat << END
+Options:
+	-c	 enable colors
+	-m	 convert binaural sbg scripts to monaural
+	-q	 not show the conversion process and messages
+	-o DIR	 specifies the output directory
+	-s SCALE set decimal precision to split amplitudes (default is 2)
+	-h	 print this help-text
+	-v	 verbose mode
+	-V	 print program version and exit
+END
+exit 0
+}
+
+
+# Default options
+MONAURAL=false		# no monaural (harmonic box is default)
+COLORS=false		# no colors
+QUIET=false		# show process of convert by default
+STDOUT=false		# no pipe
+VERBOSE=false		# verbose mode
+
+# Colors configuration
+GREEN=""		# represents the output file
+BLUE=""			# represents the input file
+CYAN=""			# name definition (valid with verbose mode)
+B_RED=""		# voice number (valid with verbose mode)
+ENDCLR=""		# end of a statement of colors
+
+PROGNAME=$(basename "$0")
+OUTPUT="`pwd`"
+TMPFILE=/tmp/.$PROGNAME-tmp.sbg
+ERROR_FILE=~/.$PROGNAME.log
+
+# For OSX support
+case $(uname -s) in
+    'Darwin')
+    			unset dos2unix unix2dos
+    			check_dos_unix || exit $?
+    			DARWIN=true
+    			;;
+    *)
+                DARWIN=false
+    			;;
+esac
+
+# Default decimal scale to split
+SCALE=2
+test $# -lt 1 && { usage; exit 0; }
+
+ ### Command line options
+
+while true; do
+  if [ "$1" = '-' ]; then
+    STDOUT=true
+    break
+  elif [ "${1:0:1}" = '-' ]; then
+    case ${1:1} in
+      m) shift 1
+         MONAURAL=true
+    ;;
+      c) shift 1
+         COLORS=true
+    ;;
+      q) shift 1
+         QUIET=true
+    ;;
+      o) test -z "$2" && exec "$0" -h
+         OUTPUT="$2"
+         shift 2
+    ;;
+      s) [[ $2 =~ ^[0-9]+ ]] || {
+           print_error "${1}: invalid value -- '${2}'"
+           exec "$0" -h
+         }
+         SCALE=$2
+	 shift 2
+    ;;
+      h) usage
+         printOpts
+    ;;
+      v) shift 1
+         VERBOSE=true
+    ;;
+      V) [ ${DARWIN} ] &&
+    		sed -E '/^#{3}/!d;s/^#{3} //g' "$0" ||
+    		sed -r '/^#{3}/!d;s/^#{3} //g' "$0"
+         exit 0
+    ;;
+      *) print_error "invalid option -- '${1:1}'"
+         usage
+         exit 1
+    ;;
+    esac
+  else
+    [ $# -lt 1 ] && exec "$0" -h
+    break
+  fi
+done
+
+if (${STDOUT})
+then
+ tee > "$TMPFILE"
+
+ if (${MONAURAL})
+ then FORMAT='mon' OPTS="-q -s $SCALE -m"
+ else FORMAT='box' OPTS="-q -s $SCALE"
+ fi
+
+ outfile="`dirname $TMPFILE`/`basename $TMPFILE .sbg`_${FORMAT}.sbg"
+ bash "$0" -o $(dirname "$TMPFILE") $OPTS "$TMPFILE"
+ test -s "$outfile" && {
+	 cat "$outfile" ; rm -f "$outfile" "$TMPFILE"
+ } || exit 1 # fail
+
+exit 0 # successfully
+fi
+
+trap "echo 'Operation aborted!' ; exit 1" 2 20
+[ -d "$OUTPUT" ] || {
+	mkdir -p "$OUTPUT" || {
+		print_error "could not create $OUTPUT directory."
+		exit 1
+	}
+}
+
+if (${COLORS}) ; then
+  GREEN='\E[01;32m'
+  BLUE='\E[01;34m'
+  CYAN='\E[01;36m'
+  B_RED='\E[01;41m'		# background
+  ENDCLR='\E[00m'
+fi
+
+if (! ${QUIET} && ${VERBOSE}) ; then
+  if (${MONAURAL}) ; then
+    printf "Action: ${BLUE}Binaural Beat${ENDCLR} to ${GREEN}Monaural Beat${ENDCLR} (scale=${B_RED}$SCALE${ENDCLR})\n"
+  else
+    printf "Action: ${BLUE}Binaural Beat${ENDCLR} to ${GREEN}Harmonic Box X${ENDCLR} (scale=${B_RED}$SCALE${ENDCLR})\n"
+  fi
+fi
+
+for infile; do
+  if [ -r "$infile" -a -s "$infile" ]; then
+    if [ "${infile##*.}" != 'sbg' ]; then
+      print_error "invalid file format - '.${infile##*.}'"
+      exit 1
+    fi
+    if [ "$DARWIN" = "true" ]; then
+      if [ $(id -u) -ne 0 ] && [ $(stat -f %u "$infile") -eq 0 ]; then
+        print_error "without permission to modify file - '$infile'"
+        exit 1
+      fi
+    fi
+    # Test sbg file
+    sbg_Ok=$(sbagen -D "$infile" 2>"$ERROR_FILE" >&2; echo $?)
+    if [ "$sbg_Ok" -ne 0 ]; then
+      grep -v '^#' "$ERROR_FILE"
+      print_error "syntax error in file '$infile'"
+      rm "$ERROR_FILE"
+      exit 1
+    fi
+    if (! ${MONAURAL}); then
+      outfile="$OUTPUT/`basename "$infile" .sbg`_box.sbg"
+    else
+      outfile="$OUTPUT/`basename "$infile" .sbg`_mon.sbg"
+    fi
+    rm -f "$outfile" "$ERROR_FILE"
+    touch "$outfile" || {
+		print_error "could not create $outfile file."
+		exit 1
+	}
+    dos2unix "$infile" >/dev/null 2>&1
+    line=0	# line count
+    if (! ${QUIET}); then
+      cat << END
+
++=============================================================================+
+| Infile = $infile
+| Outfile = $outfile
++=============================================================================+
+
+END
+    fi
+    while read BUF; do
+      line=$((++line))
+      if [[ $BUF =~ ^[a-zA-Z].*: ]]; then
+      # Comments viewed at the end of the sequence line
+        if (echo $BUF | grep -q '#') ; then
+         # Comments shown on standard output (with '##')
+         # example: pink/50 300+10/50 ## comment
+          if (echo $BUF | grep -q '##') ; then
+            cmmline="##${BUF##*#}"
+          else
+         # Comments not shown on standard output (with '#' one only)
+         # example: pink/50 300+10/50 # comment
+            cmmline="#${BUF##*#}"
+          fi
+          BUF=${BUF%%#*}
+        fi
+        # Maximum pink/spin/mix voices contained in the line
+	nn=0
+        nameDef=${BUF%%:*}
+        Voices=${BUF#*:}
+        count=$(echo $Voices | wc -w | tr -d ' ')
+        fprint "$outfile" "$nameDef:\t"
+	for ((vv = 1; vv <= count; vv += 1)) ; do
+          token=$(echo $Voices | awk -v voice=$vv '{ print $voice }')
+	  # pink noise
+          if [[ $token =~ ^p ]]; then
+            noiseAmp=${token#pink/}
+	  # spin noise
+          elif [[ $token =~ ^s ]]; then
+            noiseAmp=${token#spin:*/}
+	  # mix file
+          elif [[ $token =~ ^m ]]; then
+            noiseAmp=${token#mix/}
+          fi
+          # binaural voice
+          if [[ $token =~ ^[0-9\|.]+[\+\|\-][0-9\|.]+/[0-9\|.]+ ]]; then
+	    # carrier tone
+            carrier=$(echo $token | sed 's/[\+|\-][0-9|.]*\/[0-9|.]*//')
+	    # signal ('+' or '-')
+            signal=$(echo $token | sed "s?^$carrier??;s/[0-9|.]*\/[0-9|.]*//")
+	    # binaural beat
+            beat=$(echo $token | sed "s?^${carrier}${signal}??;s/\/[0-9|.]*//")
+	    # amplitude
+            amplitude=$(echo $token | sed "s?^${carrier}${signal}${beat}/??")
+            # calculating values
+            if (${MONAURAL}) ; then
+              carrbox=$carrier
+            else
+              carrbox=$(calc "$carrier - ($beat * 2)")
+            fi
+            if [ "$noiseAmp" ]; then
+	      # pink/spin/mix amplitude is not amended
+	      nn=$((nn+1))
+	      xx=$(((count-nn) <= 1 ? 2 : count - nn))
+	      ampclipp=$(calc "($noiseAmp + ($amplitude * ($xx*2))) > 100")
+	      [ $ampclipp -eq 1 ] &&
+	        ampsplit=$(calc "$amplitude/2") ||
+		ampsplit=$amplitude
+              unset noiseAmp
+            else
+	      ampclipp=$(calc "($amplitude * ($count*2)) > 100")
+              [ $ampclipp -eq 1 ] &&
+                ampsplit=$(calc "$amplitude/2") ||
+                ampsplit=$amplitude
+            fi
+            if [ "$signal" = '+' ]; then
+              outtoken="$carrbox+$beat/$ampsplit $carrier-$beat/$ampsplit"
+            elif [ "$signal" = '-' ]; then
+              outtoken="$carrbox-$beat/$ampsplit $carrier+$beat/$ampsplit"
+            fi
+	    # print status
+            if (! ${QUIET}) ; then
+              if (${VERBOSE}) ; then
+		printf "line=${B_RED}%d${ENDCLR}: ${CYAN}$nameDef${ENDCLR} " $((line))
+                printf "[${BLUE}$token${ENDCLR} --> ${GREEN}$outtoken${ENDCLR}]"
+                printf " (voice=${B_RED}%d${ENDCLR})\n" $((vv-nn))
+                test $vv -ne $count || printf '\n'
+              else
+                printf "[${BLUE}$token${ENDCLR}] --> [${GREEN}$outtoken${ENDCLR}]\n"
+              fi
+	   fi
+	   # Write comments of voice line if necessary
+           if [ "$cmmline" ] && ((vv == count)) ; then
+             outtoken="$outtoken $cmmline"
+             unset cmmline
+           fi
+           fprint "$outfile" "$outtoken\t"
+          else
+            # Write comments of voice line if necessary
+            if [ "$cmmline" ] && ((vv == count)) ; then
+              token="$token $cmmline"
+              unset cmmline
+            fi
+            fprint "$outfile" "$token\t"
+          fi
+        done
+        fprint "$outfile" '\n'
+      else
+        fprint "$outfile" "$BUF\n"
+      fi
+    done < "$infile"
+    # If the program does not copy the last line of the input file
+    endLine1=$(tail -n1 "$infile") endLine2=$(tail -n1 "$outfile")
+    [ "$endLine1" != "$endLine2" ] && fprint "$outfile" "$endLine1"
+    # To make the input/output file compatible with Windows system
+    unix2dos "$outfile" "$infile" >/dev/null 2>&1
+  else
+    print_error "unable to open/read file '$infile'"
+    exit 1
+  fi
+done
+
+[ $? -eq 0 -a $QUIET = "false" -a $VERBOSE = "true" ] && echo "DONE! "
+
+  ### END
