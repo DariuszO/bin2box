@@ -14,7 +14,7 @@
  *   GNU General Public License for more details.
  *
  *   You should have received a copy of the GNU General Public License
- *   along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ *   along with Bin2Box.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 package com.blacksun.bin2box.lib;
@@ -32,16 +32,16 @@ import java.util.Locale;
  * @author ruan
  */
 public class SBGConverter {
-    
+
     private final File file;
     private final FileReader fileReader;
     private final FileWriter fileWriter;
     private final BufferedReader bufferedReader;
-    
+
     private final SBGStruct sbgStruct;
-    
+
     private boolean monauralBeat;
-    
+
     public SBGConverter(String in, String out) throws FileNotFoundException, IOException {
         fileReader = new FileReader(in);
         bufferedReader = new BufferedReader(fileReader);
@@ -59,19 +59,19 @@ public class SBGConverter {
     public void setMonauralBeat(boolean monauralBeat) {
         this.monauralBeat = monauralBeat;
     }
-    
+
     public void convertSbagenFile() throws IOException {
-        
+
         String lineIn, lineOut;
         String[] token;
-        
+
         int element, noiseCount = 0;
         //int lineCount = 0;
-        
+
         while((lineIn = bufferedReader.readLine()) != null) {
-            
+
             //lineCount++;
-            
+
             if(sbgStruct.isNameDef(lineIn)) {
                 token = lineIn.split("\\s+");
                // sbgStruct.setNamedef(token[0].replace(':', ' '));
@@ -83,14 +83,14 @@ public class SBGConverter {
                         sbgStruct.setBackground(sbgStruct.extractBackground(token[element]));
                         lineOut = token[element] + " ";
                         fileWriter.write(lineOut);
-                        
+
                         if(element == (token.length-1)) {
                             if(OperatingSystem.isWindows())
                                 fileWriter.write("\r\n");
                             else
                                 fileWriter.write("\n");
                         }
-                        
+
                         continue;
                     }
                     else if(sbgStruct.isSequencie(token[element])) {
@@ -98,14 +98,14 @@ public class SBGConverter {
                         sbgStruct.setSignal(sbgStruct.extractSignal(token[element]));
                         sbgStruct.setBeat(sbgStruct.extractBeat(token[element]));
                         sbgStruct.setAmplitude(sbgStruct.extractAmplitude(token[element]));
-                        // Fix audio clipping 
+                        // Fix audio clipping
                         fixAmplitude(sbgStruct.getAmplitude(), sbgStruct.getBackground(), noiseCount, token.length-2);
-                        
+
                         lineOut = String.format("%.2f%c%.2f/%.2f ", sbgStruct.getCarrier(), sbgStruct.getSignal(),
                                 sbgStruct.getBeat(), sbgStruct.getAmplitude());
-                        
+
                         fileWriter.write(lineOut);
-                        
+
                         switch (sbgStruct.getSignal()) {
                             case '+':
                                 sbgStruct.setSignal('-');
@@ -114,54 +114,54 @@ public class SBGConverter {
                                 sbgStruct.setSignal('+');
                                 break;
                         }
-                        
+
                         if(monauralBeat)
                             lineOut = String.format("%.2f%c%.2f/%.2f ", sbgStruct.getCarrier(), sbgStruct.getSignal(),
                                 sbgStruct.getBeat(), sbgStruct.getAmplitude());
                         else
                             lineOut = String.format("%.2f%c%.2f/%.2f ", sbgStruct.getHarmonicBoxValue(), sbgStruct.getSignal(),
                                 sbgStruct.getBeat(), sbgStruct.getAmplitude());
-                        
+
                         fileWriter.write(lineOut);
-                        
+
                         if(element == (token.length-1)) {
                             if(OperatingSystem.isWindows())
                                 fileWriter.write("\r\n");
                             else
                                 fileWriter.write("\n");
                         }
-                        
+
                         continue;
                     }
                     else {
                         lineOut = token[element] + " ";
                         fileWriter.write(lineOut);
                     }
-                    
+
                     if(element == (token.length-1)) {
                         if(OperatingSystem.isWindows())
                             fileWriter.write("\r\n");
                         else
                             fileWriter.write("\n");
                     }
-                    
+
                 }
-                
-                
+
+
             }
             else {
                 if(OperatingSystem.isWindows())
                     lineOut = lineIn + "\r\n";
                 else
                     lineOut = lineIn + "\n";
-                
+
                 fileWriter.write(lineOut);
             }
         }
-        
+
         closeFile();
     }
-    
+
     private void fixAmplitude(double x, double y, int a, int b) {
         if(a>0) {
             int z = b-a <= 1 ? 2 : b-a;
@@ -174,11 +174,11 @@ public class SBGConverter {
                 sbgStruct.setAmplitude(x/2);
         }
     }
-    
+
     private void closeFile() throws IOException {
         if(fileReader != null)
             fileReader.close();
         fileWriter.close();
     }
-    
+
 }

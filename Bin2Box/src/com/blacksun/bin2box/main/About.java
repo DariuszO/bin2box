@@ -14,7 +14,7 @@
  *   GNU General Public License for more details.
  *
  *   You should have received a copy of the GNU General Public License
- *   along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ *   along with Bin2Box.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 package com.blacksun.bin2box.main;
@@ -132,7 +132,7 @@ public class About extends javax.swing.JFrame {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
          */
         try {
             /*
@@ -148,7 +148,7 @@ public class About extends javax.swing.JFrame {
             java.util.logging.Logger.getLogger(About.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
-        
+
         //</editor-fold>
 
         /* Create and display the form */

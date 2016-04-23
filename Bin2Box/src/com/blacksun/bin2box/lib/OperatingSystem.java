@@ -14,7 +14,7 @@
  *   GNU General Public License for more details.
  *
  *   You should have received a copy of the GNU General Public License
- *   along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ *   along with Bin2Box.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 package com.blacksun.bin2box.lib;
@@ -24,19 +24,19 @@ package com.blacksun.bin2box.lib;
  * @author ruan
  */
 public class OperatingSystem {
-    
+
     private static final String OS = System.getProperty("os.name").toLowerCase();
-    
+
     public static boolean isWindows() {
         return OS.contains("win");
     }
-    
+
     public static boolean isOSX() {
         return OS.contains("mac");
     }
-    
+
     public static boolean isLinux() {
         return OS.contains("nux");
     }
-    
+
 }

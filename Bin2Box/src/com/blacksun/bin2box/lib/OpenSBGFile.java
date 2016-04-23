@@ -14,7 +14,7 @@
  *   GNU General Public License for more details.
  *
  *   You should have received a copy of the GNU General Public License
- *   along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ *   along with Bin2Box.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 package com.blacksun.bin2box.lib;
@@ -24,62 +24,62 @@ import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
- * Open sbg file or dir and return the local  
+ * Open sbg file or dir and return the local
  * @author ruan
  */
 public class OpenSBGFile {
-    
+
     private final JFileChooser fc;
-    
+
     public OpenSBGFile() {
         fc = new JFileChooser();
     }
-    
+
     public String chooseFile() {
-        
+
         String sbg = null;
-        
+
         fc.setFileFilter(new FileNameExtensionFilter("SBaGen sequencie file", "sbg"));
         fc.setDialogTitle("Select sbg file");
-        
+
         if(fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
             sbg = fc.getSelectedFile().getAbsolutePath();
-        
+
         if(sbg != null)
             if(!sbg.endsWith(".sbg") && !sbg.endsWith(".SBG"))
                 sbg = null;
-      
+
         return sbg;
     }
-    
+
     public String[] chooseDir() {
-        
+
         String[] sbg = null;
         File dir = null;
-        
+
         fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         fc.setDialogTitle("Select folder with sbg files");
-        
+
         if(fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
             dir = new File(fc.getSelectedFile().getPath());
-        
+
         if(dir != null) {
-            
+
             int i = 0;
-            
+
             for (File file : dir.listFiles()){
                 if(file.isFile() && file.canRead()) {
                     if(file.getAbsolutePath().endsWith(".sbg") || file.getAbsolutePath().endsWith(".SBG"))
                         i++;
                 }
             }
-            
+
             if(i == 0)
                 return null;
-            
+
             int j = 0;
             sbg = new String[i];
-            
+
             for (File file : dir.listFiles()){
                 if(file.isFile() && file.canRead()) {
                     if(file.getAbsolutePath().endsWith(".sbg") || file.getAbsolutePath().endsWith(".SBG"))
@@ -90,33 +90,33 @@ public class OpenSBGFile {
                 }
             }
         }
-        
+
         return sbg;
-        
+
     }
-    
+
     public String chooseOutputDir() {
-        
+
        String dir = null;
        File file;
-       
+
        fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
        fc.setDialogTitle("Select output folder");
-       
-        
+
+
         if(fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
             dir = fc.getSelectedFile().getPath();
-       
-        
+
+
        if(dir != null) {
            file = new File(dir);
-           
+
            if(!file.canRead() || !file.canWrite())
                dir = null;
        }
-        
+
        return dir;
-        
+
     }
-    
+
 }

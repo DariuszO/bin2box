@@ -14,7 +14,7 @@
  *   GNU General Public License for more details.
  *
  *   You should have received a copy of the GNU General Public License
- *   along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ *   along with Bin2Box.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 package com.blacksun.bin2box.lib;
@@ -27,24 +27,24 @@ import java.util.regex.Pattern;
  * @author ruan
  */
 public class SBGStruct {
-    
+
     private String namedef;
     private double background;
     private double carrier;
     private char signal;
     private double beat;
     private double amplitude;
-    
+
     private static Pattern pattern;
     private static Matcher matcher;
-    
+
     /* elements */
     private final String digits;
     private final String spin;
     private final String label;
     private final String sequencie;
     private final String backgroundsequencie;
-    
+
     public SBGStruct() {
         digits = "(\\d+|\\d+\\.\\d+|\\.\\d+)";
         spin = "spin:\\d+\\.\\d+[\\+|\\-]\\d+\\.\\d+|spin:\\d+[\\+|\\-]\\d+|spin:\\d+\\.\\d+[\\+|\\-]\\d+|spin:\\d+[\\+|\\-]\\d+\\.\\d+";
@@ -100,89 +100,89 @@ public class SBGStruct {
     public void setBackground(double background) {
         this.background = background;
     }
-    
+
     public boolean isNameDef(String element) {
         pattern = Pattern.compile(label);
         matcher = pattern.matcher(element);
         return matcher.matches();
     }
-    
+
     public boolean isBackground(String element) {
         pattern = Pattern.compile(backgroundsequencie);
         matcher = pattern.matcher(element);
         return matcher.matches();
     }
-    
+
     public boolean isSequencie(String element) {
         pattern = Pattern.compile(sequencie);
         matcher = pattern.matcher(element);
         return matcher.matches();
     }
-    
+
     public String extractNameDef(String element) {
         pattern = Pattern.compile(namedef);
         matcher = pattern.matcher(element);
-        
+
         if(matcher.matches())
             return matcher.group(1);
-        
+
         return null;
     }
-    
+
     public double extractCarrier(String element) {
         pattern = Pattern.compile(sequencie);
         matcher = pattern.matcher(element);
-        
+
         if(matcher.matches())
             return Double.parseDouble(matcher.group(1));
-        
+
         return 0;
     }
-    
+
     public char extractSignal(String element) {
         pattern = Pattern.compile(sequencie);
         matcher = pattern.matcher(element);
-        
+
         if(matcher.matches()) {
             String c = matcher.group(2);
             return c.charAt(0);
         }
-        
+
         return 0;
     }
-    
+
     public double extractBeat(String element) {
         pattern = Pattern.compile(sequencie);
         matcher = pattern.matcher(element);
-        
+
         if(matcher.matches())
             return Double.parseDouble(matcher.group(3));
-        
+
         return 0;
     }
-    
+
     public double extractAmplitude(String element) {
         pattern = Pattern.compile(sequencie);
         matcher = pattern.matcher(element);
-        
+
         if(matcher.matches())
             return Double.parseDouble(matcher.group(4));
-        
+
         return 0;
     }
-    
+
     public double extractBackground(String element) {
         pattern = Pattern.compile(backgroundsequencie);
         matcher = pattern.matcher(element);
-        
+
         if(matcher.matches())
             return Double.parseDouble(matcher.group(2));
-        
+
         return 0;
     }
-    
+
     public double getHarmonicBoxValue() {
         return getCarrier() - (getBeat() * 2);
     }
-    
+
 }

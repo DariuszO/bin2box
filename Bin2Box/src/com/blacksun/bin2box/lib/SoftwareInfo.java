@@ -14,7 +14,7 @@
  *   GNU General Public License for more details.
  *
  *   You should have received a copy of the GNU General Public License
- *   along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ *   along with Bin2Box.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 package com.blacksun.bin2box.lib;
@@ -24,11 +24,11 @@ package com.blacksun.bin2box.lib;
  * @author ruan
  */
 public final class SoftwareInfo {
-    
+
     public static final String PROG_NAME = "Bin2Box";
     public static final String VERSION = "2.5.0";
     public static final String AUTHOR = "Ruan K. F";
     public static final String EMAIL = "ruan.klein@gmail.com";
     public static final String SITE = "http://blacksungod.blogspot.com.br/";
-    
+
 }
