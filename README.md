@@ -12,7 +12,7 @@ Bin2Box is cross-platform and it works on macOS, Linux and Windows.
 
 ### Download
 
-* [For Linux, macOS and Windows](https://www.dropbox.com/s/facuskt3t0mkjyt/Bin2Box.zip?dl=0)
+[Releases](https://github.com/occultsun/bin2box/tree/master/release)
 
 
 ### Links
