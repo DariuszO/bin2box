@@ -10,7 +10,7 @@ With bin2box, you can convert many files at once without having to edit them
 
 Bin2Box is cross-platform and it works on macOS, Linux and Windows.
 
-![Bin2Box](screenshot/bin2box.png]
+![Bin2Box](screenshot/bin2box.png)
 
 ### Links
 
